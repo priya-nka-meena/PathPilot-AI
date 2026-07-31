@@ -23,3 +23,8 @@ Thumbs.db
 data/datasets/*.csv
 data/raw/*.csv
 data/processed/*.csv
+
+config.py
+venv/
+__pycache__/
+*.pyc
