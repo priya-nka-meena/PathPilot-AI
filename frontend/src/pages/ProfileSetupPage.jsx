@@ -153,7 +153,7 @@ function ProfileSetupPage() {
     setTimeout(() => {
       console.log("Profile setup data:", formData);
       setIsCompleting(false);
-      navigate("/");
+    navigate("/dashboard");
     }, 500);
   };
 

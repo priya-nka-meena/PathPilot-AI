@@ -58,7 +58,7 @@ function LoginPage() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      navigate("/");
+      navigate("/dashboard");
     }, 400);
   };
 
