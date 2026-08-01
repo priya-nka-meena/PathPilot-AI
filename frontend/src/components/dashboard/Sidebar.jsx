@@ -3,12 +3,13 @@ import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
   { label: 'Dashboard', to: '/dashboard' },
-  { label: 'AI Career Advisor', to: '/dashboard/ai' },
-  { label: 'Live Jobs', to: '/dashboard/jobs' },
-  { label: 'Job Recommendations', to: '/dashboard/recommendations' },
-  { label: 'Resume Analysis', to: '/dashboard/resume' },
-  { label: 'Skill Gap Analysis', to: '/dashboard/skill-gap' },
+  { label: 'AI Career Chat', to: '/dashboard/ai' },
+  { label: 'Profile', to: '/profile' },
+  { label: 'Jobs', to: '/dashboard/jobs' },
+  { label: 'Recommendations', to: '/dashboard/recommendations' },
+  { label: 'Skill Gap', to: '/dashboard/skill-gap' },
   { label: 'Learning Roadmap', to: '/dashboard/roadmap' },
+  { label: 'Resume (Coming Soon)', to: '/dashboard/resume' },
   { label: 'Settings', to: '/dashboard/settings' },
 ];
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function ProfileCompletion({ percent = 72, missing = ['Resume', 'Experience', 'Career Preferences'] }) {
   const stroke = 12;
@@ -36,7 +37,7 @@ export default function ProfileCompletion({ percent = 72, missing = ['Resume', '
           </ul>
 
           <div className="mt-4">
-            <button className="px-3 py-2 bg-indigo-600 text-white rounded-md text-sm">Complete Profile</button>
+            <Link to="/profile" className="px-3 py-2 bg-indigo-600 text-white rounded-md text-sm inline-block">Complete Profile</Link>
           </div>
         </div>
       </div>
