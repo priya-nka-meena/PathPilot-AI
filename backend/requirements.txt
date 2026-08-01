@@ -1,0 +1,8 @@
+Django>=4.2
+djangorestframework>=3.14
+psycopg2-binary>=2.9
+django-cors-headers>=3.15
+dj-database-url>=1.0
+python-dotenv>=1.0
+# Optional: simplejwt for JWT auth when ready
+djangorestframework-simplejwt>=5.2
