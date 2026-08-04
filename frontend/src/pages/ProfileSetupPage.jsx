@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import profileService from "../services/profileService";
 
 function Logo({ className = "h-8 w-8" }) {
   return (
@@ -24,31 +25,31 @@ function Logo({ className = "h-8 w-8" }) {
 
 const INITIAL_FORM = {
   // Basic Information
-  name: "Priyanka Sharma",
-  college: "National Institute of Technology, Jaipur",
-  degree: "B.Tech - Computer Science",
-  graduationYear: "2024",
-  location: "Bengaluru, India",
+  name: "",
+  college: "",
+  degree: "",
+  graduationYear: "",
+  location: "",
 
   // Career
-  careerGoal: "Build reliable, scalable backend systems and grow into a platform engineering role.",
-  interestedRoles: ["Backend Engineer", "Platform Engineer"],
-  preferredCompanies: ["Google", "Stripe", "Amazon"],
-  workPreference: "Remote",
+  careerGoal: "",
+  interestedRoles: [],
+  preferredCompanies: [],
+  workPreference: "",
 
   // Skills
-  skills: ["Python", "Node.js", "PostgreSQL"],
+  skills: [],
 
   // Experience
-  internships: ["Backend Intern - FinTech startup (6 months)"],
-  projects: ["Distributed job scheduler - GitHub"] ,
-  openSource: ["contributed to fastify plugins"],
-  hackathons: ["Hack for Good 2022 - Runner-up"],
-  experienceLevel: "Entry",
+  internships: [],
+  projects: [],
+  openSource: [],
+  hackathons: [],
+  experienceLevel: "",
 
   // Education
-  cgpa: "8.4",
-  branch: "Computer Science",
+  cgpa: "",
+  branch: "",
 
   // Resume
   resume: null,
@@ -57,15 +58,18 @@ const INITIAL_FORM = {
   about: "",
 
   // Preferences
-  preferredCity: "Bengaluru",
-  preferredCountry: "India",
-  jobType: "Full-time",
-  internshipOrFullTime: "Full-time",
-  companyType: "Startup",
+  preferredCity: "",
+  preferredCountry: "",
+  jobType: "",
+  internshipOrFullTime: "",
+  companyType: "",
 
   // Privacy
   allowPersonalization: true,
   allowResumeAnalysis: false,
+
+  // User info (read-only from backend)
+  email: "",
 };
 
 function Section({ title, children, optional }) {
@@ -86,6 +90,59 @@ export default function ProfileSetupPage() {
   const [form, setForm] = useState(INITIAL_FORM);
   const [skillInput, setSkillInput] = useState("");
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await profileService.getProfile();
+        if (!mounted || !data) return;
+        // Map backend profile fields to frontend form structure
+        const mapped = {
+          // Basic Information
+          name: data.user?.full_name || INITIAL_FORM.name,
+          email: data.user?.email || INITIAL_FORM.email,
+          location: data.location || INITIAL_FORM.location,
+          college: data.college || INITIAL_FORM.college,
+          degree: data.degree || INITIAL_FORM.degree,
+          graduationYear: data.graduation_year || INITIAL_FORM.graduationYear,
+          branch: data.branch || INITIAL_FORM.branch,
+          cgpa: data.cgpa || INITIAL_FORM.cgpa,
+          // Career
+          careerGoal: data.career_goal || INITIAL_FORM.careerGoal,
+          interestedRoles: Array.isArray(data.interested_roles) ? data.interested_roles : INITIAL_FORM.interestedRoles,
+          preferredCompanies: Array.isArray(data.preferred_companies) ? data.preferred_companies : INITIAL_FORM.preferredCompanies,
+          workPreference: data.work_preference || INITIAL_FORM.workPreference,
+          // Skills
+          skills: Array.isArray(data.skills) ? data.skills : INITIAL_FORM.skills,
+          // Experience
+          internships: Array.isArray(data.internships) ? data.internships : INITIAL_FORM.internships,
+          projects: Array.isArray(data.projects) ? data.projects : INITIAL_FORM.projects,
+          openSource: Array.isArray(data.open_source_contributions) ? data.open_source_contributions : INITIAL_FORM.openSource,
+          hackathons: Array.isArray(data.hackathons) ? data.hackathons : INITIAL_FORM.hackathons,
+          experienceLevel: data.experience_level || INITIAL_FORM.experienceLevel,
+          // About
+          about: data.bio || INITIAL_FORM.about,
+          // Preferences
+          preferredCity: data.preferred_city || INITIAL_FORM.preferredCity,
+          preferredCountry: data.preferred_country || INITIAL_FORM.preferredCountry,
+          jobType: data.job_type || INITIAL_FORM.jobType,
+          internshipOrFullTime: data.internship_or_fulltime || INITIAL_FORM.internshipOrFullTime,
+          companyType: data.company_type || INITIAL_FORM.companyType,
+          // Privacy
+          allowPersonalization: data.allow_personalization !== undefined ? data.allow_personalization : INITIAL_FORM.allowPersonalization,
+          allowResumeAnalysis: data.allow_resume_analysis !== undefined ? data.allow_resume_analysis : INITIAL_FORM.allowResumeAnalysis,
+        };
+        setForm((p) => ({ ...p, ...mapped }));
+      } catch (err) {
+        console.error('Failed to load profile', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => (mounted = false);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -118,16 +175,110 @@ export default function ProfileSetupPage() {
     setSaved(false);
   };
 
-  const handleSave = () => {
-    // Keep data in React state only. No backend calls.
-    console.log("Saved profile (client-only):", form);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    setSaved(false);
+    try {
+      // Validate CGPA if provided
+      if (form.cgpa && isNaN(parseFloat(form.cgpa))) {
+        alert('CGPA must be a valid number.');
+        return;
+      }
+      // Validate graduation year if provided
+      if (form.graduationYear && !/^(19|20)\d{2}$/.test(form.graduationYear)) {
+        alert('Graduation year must be a valid year (e.g., 2024).');
+        return;
+      }
+      // Map form to backend profile fields
+      const payload = {
+        // Basic Information
+        location: form.location,
+        college: form.college,
+        degree: form.degree,
+        branch: form.branch,
+        graduation_year: form.graduationYear,
+        cgpa: form.cgpa,
+        // Career
+        career_goal: form.careerGoal,
+        interested_roles: form.interestedRoles,
+        preferred_companies: form.preferredCompanies,
+        work_preference: form.workPreference,
+        // Skills
+        skills: form.skills,
+        // Experience
+        internships: form.internships,
+        projects: form.projects,
+        open_source_contributions: form.openSource,
+        hackathons: form.hackathons,
+        experience_level: form.experienceLevel,
+        // About
+        bio: form.about,
+        // Preferences
+        preferred_city: form.preferredCity,
+        preferred_country: form.preferredCountry,
+        job_type: form.jobType,
+        internship_or_fulltime: form.internshipOrFullTime,
+        company_type: form.companyType,
+        // Privacy
+        allow_personalization: form.allowPersonalization,
+        allow_resume_analysis: form.allowResumeAnalysis,
+      };
+      await profileService.updateProfile(payload);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      alert('Failed to save profile.');
+      console.error(err);
+    }
   };
 
-  const resetToPlaceholder = () => {
-    setForm(INITIAL_FORM);
-    setSaved(false);
+  const resetToPlaceholder = async () => {
+    try {
+      setLoading(true);
+      const data = await profileService.getProfile();
+      if (!data) return;
+      // Re-fetch and restore from backend
+      const mapped = {
+        // Basic Information
+        name: data.user?.full_name || INITIAL_FORM.name,
+        email: data.user?.email || INITIAL_FORM.email,
+        location: data.location || INITIAL_FORM.location,
+        college: data.college || INITIAL_FORM.college,
+        degree: data.degree || INITIAL_FORM.degree,
+        graduationYear: data.graduation_year || INITIAL_FORM.graduationYear,
+        branch: data.branch || INITIAL_FORM.branch,
+        cgpa: data.cgpa || INITIAL_FORM.cgpa,
+        // Career
+        careerGoal: data.career_goal || INITIAL_FORM.careerGoal,
+        interestedRoles: Array.isArray(data.interested_roles) ? data.interested_roles : INITIAL_FORM.interestedRoles,
+        preferredCompanies: Array.isArray(data.preferred_companies) ? data.preferred_companies : INITIAL_FORM.preferredCompanies,
+        workPreference: data.work_preference || INITIAL_FORM.workPreference,
+        // Skills
+        skills: Array.isArray(data.skills) ? data.skills : INITIAL_FORM.skills,
+        // Experience
+        internships: Array.isArray(data.internships) ? data.internships : INITIAL_FORM.internships,
+        projects: Array.isArray(data.projects) ? data.projects : INITIAL_FORM.projects,
+        openSource: Array.isArray(data.open_source_contributions) ? data.open_source_contributions : INITIAL_FORM.openSource,
+        hackathons: Array.isArray(data.hackathons) ? data.hackathons : INITIAL_FORM.hackathons,
+        experienceLevel: data.experience_level || INITIAL_FORM.experienceLevel,
+        // About
+        about: data.bio || INITIAL_FORM.about,
+        // Preferences
+        preferredCity: data.preferred_city || INITIAL_FORM.preferredCity,
+        preferredCountry: data.preferred_country || INITIAL_FORM.preferredCountry,
+        jobType: data.job_type || INITIAL_FORM.jobType,
+        internshipOrFullTime: data.internship_or_fulltime || INITIAL_FORM.internshipOrFullTime,
+        companyType: data.company_type || INITIAL_FORM.companyType,
+        // Privacy
+        allowPersonalization: data.allow_personalization !== undefined ? data.allow_personalization : INITIAL_FORM.allowPersonalization,
+        allowResumeAnalysis: data.allow_resume_analysis !== undefined ? data.allow_resume_analysis : INITIAL_FORM.allowResumeAnalysis,
+      };
+      setForm(mapped);
+      setSaved(false);
+    } catch (err) {
+      console.error('Failed to reset profile', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -144,7 +295,7 @@ export default function ProfileSetupPage() {
 
           <div className="flex items-center gap-3">
             <button onClick={resetToPlaceholder} className="text-sm px-3 py-2 rounded-md border border-slate-200 bg-white">Reset</button>
-            <button onClick={handleSave} className="text-sm px-4 py-2 rounded-md bg-indigo-600 text-white">Save Changes</button>
+            <button onClick={handleSave} disabled={loading} className="text-sm px-4 py-2 rounded-md bg-indigo-600 text-white disabled:opacity-60">{loading ? 'Loading...' : 'Save Changes'}</button>
           </div>
         </div>
       </header>
@@ -156,6 +307,10 @@ export default function ProfileSetupPage() {
               <div>
                 <label className="block text-sm text-slate-600">Full name</label>
                 <input name="name" value={form.name} onChange={handleChange} className="mt-1 w-full rounded-md border px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600">Email</label>
+                <input name="email" value={form.email} readOnly className="mt-1 w-full rounded-md border px-3 py-2 bg-slate-50" />
               </div>
               <div>
                 <label className="block text-sm text-slate-600">Location (City)</label>
@@ -345,7 +500,7 @@ export default function ProfileSetupPage() {
                 <span className="text-sm">Allow resume analysis</span>
               </label>
 
-              <div className="text-xs text-slate-400">Changes are saved locally in the browser state for now. No data is sent to any server.</div>
+              <div className="text-xs text-slate-400">Changes are saved to the database.</div>
             </div>
           </Section>
         </div>
@@ -362,7 +517,7 @@ export default function ProfileSetupPage() {
             </div>
 
             <div className="mt-4 flex gap-2">
-              <button onClick={handleSave} className="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-md text-sm">Save</button>
+              <button onClick={handleSave} disabled={loading} className="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-md text-sm disabled:opacity-60">{loading ? 'Saving...' : 'Save'}</button>
               <button onClick={() => alert('You can continue later.')} className="px-3 py-2 border rounded-md text-sm">Skip</button>
             </div>
           </div>
@@ -378,7 +533,7 @@ export default function ProfileSetupPage() {
 
           <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
             <h4 className="text-sm font-semibold text-slate-900">Status</h4>
-            <div className="mt-2 text-sm text-slate-600">{saved ? 'Saved locally' : 'Not saved'}</div>
+            <div className="mt-2 text-sm text-slate-600">{saved ? 'Saved to database' : 'Unsaved changes'}</div>
           </div>
         </aside>
       </main>

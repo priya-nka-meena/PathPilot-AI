@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import FormInput from "../components/auth/FormInput";
+import authService from "../services/authService";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -46,7 +47,7 @@ function LoginPage() {
     setErrors(validate(form));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setTouched({ email: true, password: true });
 
@@ -56,10 +57,16 @@ function LoginPage() {
     if (Object.keys(validationErrors).length > 0) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      await authService.login({ email: form.email, password: form.password });
+      // on success, navigate to dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Login failed';
+      setErrors((prev) => ({ ...prev, form: msg }));
+    } finally {
       setIsSubmitting(false);
-      navigate("/dashboard");
-    }, 400);
+    }
   };
 
   return (
@@ -112,6 +119,8 @@ function LoginPage() {
             Forgot password?
           </a>
         </div>
+
+        {errors.form && <div className="text-sm text-red-600">{errors.form}</div>}
 
         <button
           type="submit"

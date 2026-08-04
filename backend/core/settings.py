@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     # Third-party
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
 
     # Local apps
     'apps.accounts',
@@ -118,18 +119,27 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
-# Simple JWT settings placeholder (to be enabled during auth implementation)
+# Simple JWT settings
+from datetime import timedelta as _td
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.environ.get('JWT_ACCESS_MINUTES', '60'))),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.environ.get('JWT_REFRESH_DAYS', '7'))),
+    'ACCESS_TOKEN_LIFETIME': _td(minutes=int(os.environ.get('JWT_ACCESS_MINUTES', '60'))),
+    'REFRESH_TOKEN_LIFETIME': _td(days=int(os.environ.get('JWT_REFRESH_DAYS', '7'))),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': os.environ.get('DJANGO_SECRET_KEY', SECRET_KEY),
 }
+
+# Use custom user model
+AUTH_USER_MODEL = "accounts.CustomUser"
 
 # CORS: during development allow local frontend origins via env
 CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL', '1') == '1'

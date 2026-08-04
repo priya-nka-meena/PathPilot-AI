@@ -5,19 +5,21 @@ import RegisterPage from "./pages/RegisterPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
 import DashboardRoute from "./pages/DashboardRoute";
 import ComingSoon from "./pages/ComingSoon";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import PublicRoute from "./components/auth/PublicRoute";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/profile" element={<ProfileSetupPage />} />
-        <Route path="/profile-setup" element={<ProfileSetupPage />} />
+        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
+        <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
 
         {/* Dashboard and sub-pages */}
-        <Route path="/dashboard" element={<DashboardRoute />} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardRoute /></ProtectedRoute>} />
         <Route path="/dashboard/ai" element={<ComingSoon title="AI Career Advisor - Coming Soon" />} />
         <Route path="/dashboard/jobs" element={<ComingSoon title="Live Jobs - Coming Soon" />} />
         <Route path="/dashboard/recommendations" element={<ComingSoon title="Recommendations - Coming Soon" />} />

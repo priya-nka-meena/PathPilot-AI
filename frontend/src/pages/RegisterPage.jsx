@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import FormInput from "../components/auth/FormInput";
+import authService from "../services/authService";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -63,7 +64,7 @@ function RegisterPage() {
     setErrors(validate(form));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setTouched({
       fullName: true,
@@ -78,10 +79,16 @@ function RegisterPage() {
     if (Object.keys(validationErrors).length > 0) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      await authService.register({ fullName: form.fullName, email: form.email, password: form.password });
+      alert('Registration successful. Please login.');
+      navigate('/login');
+    } catch (err) {
+      const msg = err.response?.data || err.message || 'Registration failed';
+      setErrors((prev) => ({ ...prev, form: JSON.stringify(msg) }));
+    } finally {
       setIsSubmitting(false);
-      navigate("/profile-setup");
-    }, 400);
+    }
   };
 
   return (
@@ -142,6 +149,8 @@ function RegisterPage() {
           onBlur={handleBlur}
           error={touched.confirmPassword ? errors.confirmPassword : undefined}
         />
+
+        {errors.form && <div className="text-sm text-red-600">{errors.form}</div>}
 
         <button
           type="submit"
